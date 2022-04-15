@@ -1,0 +1,36 @@
+from sklearn.feature_selection import RFECV, SelectKBest
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+
+
+from sklearn.pipeline import Pipeline
+
+#this is the classifier used for feature selection
+clf_featr_sele = RandomForestClassifier(random_state=42) 
+                                                                                  
+rfecv = RFECV(estimator=clf_featr_sele, 
+              step=10, 
+              cv=5, 
+              scoring='accuracy')
+
+clf = clf_featr_sele
+
+CV_rfc = GridSearchCV(clf, 
+                      param_grid={"n_estimators"      : [10,20,30,40,50],
+            "max_features"      : ["auto", "sqrt"],
+            "min_samples_split" : [2,4,8],
+            "max_depth": [1,2,4],
+            "max_leaf_nodes": [2,4,6],
+            "min_samples_leaf": [1,2,4],
+            "bootstrap": [True, False]},
+                      cv= 5, scoring='accuracy')
+
+pipeline  = Pipeline([('feature_sele',rfecv),
+                      ('clf_cv',CV_rfc)])
+
+pipeline.fit(X_train, np.ravel(y_train))
+yhat = pipeline.predict(X_test)
+
+print(accuracy_score(y_test, yhat))
